@@ -1,4 +1,5 @@
 import "ecere"
+import "PlaylistViewUINT"
 
 class PlaylistView : ListBox
 {
@@ -9,7 +10,7 @@ class PlaylistView : ListBox
    hasHeader = true;
 
    /* DataFields used to set and get data from view */
-   DataField trackf { class(unsigned int), editable = false,
+   DataField trackf { class(PlaylistViewUINT), editable = false,
                         fixed = true, alignment = center , width = 35,
                         header = "track", userData = this, freeData = true };
 
@@ -42,7 +43,7 @@ class PlaylistView : ListBox
    public void addTrack(const unsigned int tracknum, const String title, const String location)
    {
       DataRow row = AddRow();
-      row.SetData(this.trackf, tracknum);
+      row.SetData(this.trackf, PlaylistViewUINT {data = tracknum, state = normal});
       row.SetData(this.titlef, title);
       row.SetData(this.locationf, location);
       this.Update(null);
