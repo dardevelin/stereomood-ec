@@ -34,7 +34,7 @@
       {
          "Folder" : "./ui-widgets",
          "Files" : [
-
+            "ui-widgets/StmLabel.ec"
          ]
       },
       "MainWindow.ec"
