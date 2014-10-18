@@ -1,31 +1,31 @@
 import "ecere"
 
-enum e_status { error, inactive, fetching, ready };
+enum StmLabelState { error, inactive, fetching, ready };
 
 
 class StmLabel : Label
 {
-   public void changeStatus(e_status code)
+   public void changeStatus(StmLabelState code)
    {
       switch(code)
       {
          default:
-         case e_status::inactive:
+         case StmLabelState::inactive:
             this.caption = "status: Inactive";
             this.foreground = red;
             break;
 
-         case e_status::error:
+         case StmLabelState::error:
             this.caption = "status: Error";
             this.foreground = red;
             break;
 
-         case e_status::fetching:
+         case StmLabelState::fetching:
             this.caption = "status: Fetching";
             this.foreground = yellow;
             break;
 
-         case e_status::ready:
+         case StmLabelState::ready:
             this.caption = "status: Ready";
             this.foreground = green;
             break;
