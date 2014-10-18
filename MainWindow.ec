@@ -34,6 +34,21 @@ class StmWindow : Window
          tab.SelectTab();
          tab.tabControl.Update(null);
          */
+         AsyncFetch asyncRequest { userData = this,
+                                   success_cb = notifyOnTaskSuccess,
+                                   failure_cb = notifyOnTaskFailure };
+
+         /* lock the UI until we finished the task. see toggleInputState
+          * comment to learn why */
+         toggleInputState();
+         /* set the mood for our task */
+         asyncRequest.mood.concat(this.moodEntry.contents);
+         asyncRequest.Create();
+         /* let the user know our Task is executing */
+         this.requestStatusLabel.changeStatus(fetching);
+
+         /* make sure we don't have any UI glitch and update */
+         Update(null);
          return true;
       }/* end NotifyClicked downloadBtn */
 
