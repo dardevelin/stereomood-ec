@@ -1,5 +1,6 @@
 import "ecere"
 import "StmLabel"
+import "AsyncFetch"
 import "PlaylistTabView"
 
 
@@ -66,6 +67,57 @@ class StmWindow : Window
    {
       this, caption = "Download", size = { 151, 21 }, position = { 448, 288 };
    };/* end downloadBtn instance */
+
+   /* UI notification handlders. this functions control UI animations */
+   /* when the user sets a mood a new task is initiated.
+    * this newly created task calls-back either success or failure and
+    * here we update the UI accordingly */
+
+    bool notifyOnTaskSuccess(AsyncTask task)
+    {
+       /* AsyncFetch is really what we are dealing with */
+       AsyncFetch fetch = (AsyncFetch)task;
+       unsigned int num_tracks = 0;
+       unsigned int iter = 0;
+
+       if( !fetch || !fetch.playlist || !fetch.playlist.trackList
+         || !fetch.playlist.trackList.count ) {
+            return false;
+       }
+
+       num_tracks = fetch.playlist.trackList.count;
+
+       for(iter = 0; iter < num_tracks; ++iter)
+       {
+         this.playlistView.addTrack(atoi(fetch.playlist.trackList[iter].trackNum),
+                                    fetch.playlist.trackList[iter].title,
+                                    fetch.playlist.trackList[iter].location);
+       }/*end for loop */
+       /*set the ui status label to ready*/
+       this.requestStatusLabel.changeStatus(ready);
+       /* unlock our input mechanisms */
+       this.toggleInputState();
+       return true;
+    }/* end notifyOntaskSuccess func */
+
+    bool notifyOnTaskFailure(AsyncTask task)
+    {
+       /* set the ui status label to error/fail */
+       this.requestStatusLabel.changeStatus(error);
+       /* unlock out input mechanisms */
+       this.toggleInputState();
+       return true;
+    }/*end notifyOnTaskFailure func */
+
+    /* since we are still not using tabbed view we lock the
+     * input mechanisms in order to prevent a race condition
+     * of multiple tasks trying to access the same playlistview.
+     * this function helps us doing this without duplication */
+   public void toggleInputState()
+   {
+      this.moodEntry.disabled = this.moodEntry.disabled ? false : true;
+      this.fetchBtn.disabled = this.fetchBtn.disabled ? false : true;
+   }/* end toggleInputState */
 
    bool OnCreate(void)
    {
