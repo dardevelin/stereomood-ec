@@ -35,10 +35,20 @@
          "Folder" : "./ui-widgets",
          "Files" : [
             "ui-widgets/StmLabel.ec",
-            "PlaylistView.ec"
+            "PlaylistView.ec",
+            "./ui-widgets/PlaylistTabView.ec"
          ]
       },
-      "MainWindow.ec"
+      {
+         "Folder" : "utils",
+         "Files" : [
+            "AsyncTask.ec",
+            "DynamicString.ec"
+         ]
+      },
+      "MainWindow.ec",
+      "StmPlaylist.ec",
+      "AsyncFetch.ec"
    ],
    "ResourcesPath" : "",
    "Resources" : [
