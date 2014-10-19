@@ -48,7 +48,9 @@
       },
       "MainWindow.ec",
       "StmPlaylist.ec",
-      "AsyncFetch.ec"
+      "AsyncFetch.ec",
+      "PlaylistViewUINT.ec",
+      "AsyncDownload.ec"
    ],
    "ResourcesPath" : "",
    "Resources" : [
