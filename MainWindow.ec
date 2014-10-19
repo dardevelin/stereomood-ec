@@ -1,6 +1,7 @@
 import "ecere"
 import "StmLabel"
 import "AsyncFetch"
+import "AsyncDownload"
 import "PlaylistTabView"
 
 
@@ -81,6 +82,41 @@ class StmWindow : Window
    Button downloadBtn
    {
       this, caption = "Download", size = { 151, 21 }, position = { 448, 288 };
+
+      bool NotifyClicked(Button button, int x, int y, Modifiers mods)
+      {
+         FileDialog saveDialog { type = save };
+         DialogResult dialog_res;
+         char *link = null;
+
+         if( this.playlistView.multiSelect == true ) {
+            return false; //not implemented yet
+         }
+
+         link = this.playlistView.currentRow.GetData(this.playlistView.locationf);
+         saveDialog.filePath = link;
+         /*FIXME: add support for other platforms default location */
+         saveDialog.currentDirectory = "/home/";
+
+         dialog_res = saveDialog.Modal();
+
+         if( dialog_res == yes || dialog_res == ok ) {
+
+            AsyncDownload asyncDownload {
+               userData = this.playlistView.currentRow.GetData(this.playlistView.trackf),
+               success_cb = notifyOnDownloadSuccess,
+               failure_cb = notifyOnDownloadFailure };
+
+
+            asyncDownload.url.concat(link);
+
+            asyncDownload.save_path.concat(saveDialog.filePath);
+            asyncDownload.Create();
+            return true;
+         }
+         /* we failed to select a path don't proceed */
+         return false;
+      }/*end NotifyClicked downloadBtn*/
    };/* end downloadBtn instance */
 
    /* UI notification handlders. this functions control UI animations */
@@ -88,6 +124,7 @@ class StmWindow : Window
     * this newly created task calls-back either success or failure and
     * here we update the UI accordingly */
 
+    /* AsyncFetch succcess */
     bool notifyOnTaskSuccess(AsyncTask task)
     {
        /* AsyncFetch is really what we are dealing with */
@@ -115,6 +152,7 @@ class StmWindow : Window
        return true;
     }/* end notifyOntaskSuccess func */
 
+    /* AsyncFetch failure */
     bool notifyOnTaskFailure(AsyncTask task)
     {
        /* set the ui status label to error/fail */
@@ -124,20 +162,38 @@ class StmWindow : Window
        return true;
     }/*end notifyOnTaskFailure func */
 
+    /* AsyncDownload succcess */
+    bool notifyOnDownloadSuccess(AsyncTask task)
+    {
+       AsyncDownload handle = (AsyncDownload)task;
+
+       ((PlaylistViewUINT)handle.userData).state = ready;
+       this.Update(null);
+    }/*end notifyOnDownloadSuccess func */
+
+    /* AsyncDownload failure */
+    bool notifyOnDownloadFailure(AsyncTask task)
+    {
+       AsyncDownload handle = (AsyncDownload)task;
+
+      ((PlaylistViewUINT)handle.userData).state = error;
+      this.Update(null);
+    }/*end notifyOnDownloadFailure func */
+
     /* since we are still not using tabbed view we lock the
      * input mechanisms in order to prevent a race condition
      * of multiple tasks trying to access the same playlistview.
      * this function helps us doing this without duplication */
-   public void toggleInputState()
-   {
+    public void toggleInputState()
+    {
       this.moodEntry.disabled = this.moodEntry.disabled ? false : true;
       this.fetchBtn.disabled = this.fetchBtn.disabled ? false : true;
-   }/* end toggleInputState */
+    }/* end toggleInputState */
 
-   bool OnCreate(void)
-   {
+    bool OnCreate(void)
+    {
       return true;
-   }
+    }
 }/* end StmWindow class */
 
 StmWindow mainWindow {};
