@@ -50,8 +50,9 @@ class AsyncDownload : AsyncTask
          https_ptr[2] = 't';
          https_ptr[3] = 't';
          https_ptr[4] = 'p';
-         https_ptr[5] = '/';
+	 https_ptr[5] = ':';
          https_ptr[6] = '/';
+         https_ptr[7] = '/';
          remote_file = FileOpen(&https_ptr[1], read);
       }else {
          remote_file = FileOpen(relocation, read);
