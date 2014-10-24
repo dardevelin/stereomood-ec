@@ -39,9 +39,10 @@ public class DynamicString : Array<char>
    bool OnGetDataFromString(char * string)
    {
       this = (DynamicString)string;
+      return true;
    }
 
-   void concat(String s)
+   void concat(const char *s)
    {
       int len = strlen(s);
       if(len)
@@ -70,9 +71,8 @@ public class DynamicString : Array<char>
       // TODO: improve this to work directly on the Array<char> instead of calling PrintStdArgsToBuffer
       char string[MAX_F_STRING];
       va_list args;
-      int len;
       va_start(args, object);
-      len = PrintStdArgsToBuffer(string, sizeof(string), object, args);
+      PrintStdArgsToBuffer(string, sizeof(string), object, args);
       concat(string);
       va_end(args);
    }
