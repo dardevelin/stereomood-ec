@@ -13,7 +13,7 @@ class StmWindow : Window
    hasMinimize = true;
    hasClose = true;
    clientSize = { 616, 324 };
-   anchor = { horz = -10, vert = -56 }
+   anchor = { horz = -10, vert = -56 };
 
    /*UI head static 'input' mechanisms */
 
@@ -169,6 +169,7 @@ class StmWindow : Window
 
        ((PlaylistViewUINT)handle.userData).state = ready;
        this.Update(null);
+       return true;
     }/*end notifyOnDownloadSuccess func */
 
     /* AsyncDownload failure */
@@ -178,6 +179,7 @@ class StmWindow : Window
 
       ((PlaylistViewUINT)handle.userData).state = error;
       this.Update(null);
+      return true;
     }/*end notifyOnDownloadFailure func */
 
     /* since we are still not using tabbed view we lock the
