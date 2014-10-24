@@ -1,5 +1,6 @@
 import "AsyncTask"
 import "DynamicString"
+import "PlaylistViewUINT"
 
 class AsyncDownload : AsyncTask
 {
@@ -19,18 +20,20 @@ class AsyncDownload : AsyncTask
 
    private bool execute()
    {
-      bool opened = false;
-      bool first = true;
+      //bool opened = false;
+      //bool first = true;
       char relocation[4096];
       char *https_ptr = null;
-      const unsigned int max_attempts = 5;
-      unsigned int attempts = 0;
+      //const unsigned int max_attempts = 5;
+      //unsigned int attempts = 0;
       HTTPFile network_file {};
       File remote_file {};
 
       if( !url || !url.array || !save_path || !save_path.array )
          return false;
 
+      //update the UI and mark the track as fetching
+      ((PlaylistViewUINT)userData).state = fetching;
       /* make sure we always get a terminated string */
       memset(relocation, '\0', 4096);
       /*FIXME: change from harded coded counted redirects and allow
