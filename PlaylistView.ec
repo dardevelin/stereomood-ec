@@ -16,11 +16,11 @@ class PlaylistView : ListBox
 
    DataField titlef { class(String), editable = false, fixed = true,
                      alignment = left , width = 200, header = "title",
-                     userData = "userdata", freeData = true };
+                     freeData = true };
 
    DataField locationf { class(String), editable = false, fixed = true,
                         alignment = left , width = 150, header = "location",
-                        userData = "userdata", freeData = true };
+                        freeData = true };
 
    /* constructor */
    PlaylistView()
