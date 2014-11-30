@@ -19,7 +19,8 @@ class StmWindow : Window
 
    EditBox moodEntry
    {
-      this, caption = "moodEntry", size = { 382, 19 }, position = { 24, 24 }
+      this, caption = "moodEntry", size = { 382, 19 }, position = { 24, 24 };
+
    };/* end moodEntry instance */
 
    Button fetchBtn
@@ -69,7 +70,7 @@ class StmWindow : Window
    PlaylistView playlistView
    {
       this, caption = "playlistView", size = { 572, 198 },
-      position = { 24, 64 }, hasHeader = true;
+      position = { 24, 64 }, hasHeader = true, multiSelect = true;
    };/* end PlaylistView instance */
 
    /*UI footer - static 'output' mechanism */
@@ -78,7 +79,35 @@ class StmWindow : Window
       this, caption = "status:", font = { "Tahoma", 8.25f, bold = true },
       size = { 147, 13 }, position = { 24, 296 };
    };/* end StmLabel instance */
+   Button OpenInVLCBtn
+   {
+      this, caption = $"OpenInVLC", size = { 151, 21 }, position = { 280, 288 };
 
+      bool NotifyClicked(Button button, int x, int y, Modifiers mods)
+      {
+         DynamicString buff {};
+         OldList list {};
+         char *link = null;
+
+         buff.concat("vlc");
+
+         if ( true == this.playlistView.multiSelect ) {
+            this.playlistView.GetMultiSelection(list);
+            while( list.count ) {
+               link = ((DataRow)((OldLink)list.first).data).GetData(this.playlistView.locationf);
+               buff.concatf(" \"%s\"", link);
+               list.Delete(list.first);
+            }
+
+         }
+
+         buff.concatf(" &");
+
+         system(buff.array);
+
+         return true;
+      }
+   };
    Button downloadBtn
    {
       this, caption = "Download", size = { 151, 21 }, position = { 448, 288 };
@@ -87,10 +116,11 @@ class StmWindow : Window
       {
          FileDialog saveDialog { type = save };
          DialogResult dialog_res;
+         OldList list {};
          char *link = null;
 
-         if( this.playlistView.multiSelect == true ) {
-            return false; //not implemented yet
+         if( true == this.playlistView.multiSelect ) {
+            this.playlistView.GetMultiSelection(list);
          }
 
          link = this.playlistView.currentRow.GetData(this.playlistView.locationf);
@@ -102,16 +132,23 @@ class StmWindow : Window
 
          if( dialog_res == yes || dialog_res == ok ) {
 
-            AsyncDownload asyncDownload {
-               userData = this.playlistView.currentRow.GetData(this.playlistView.trackf),
-               success_cb = notifyOnDownloadSuccess,
-               failure_cb = notifyOnDownloadFailure };
+            while( list.count ) {
+
+               AsyncDownload asyncDownload {
+                  userData = ((DataRow)((OldLink)list.first).data).GetData(this.playlistView.trackf),
+                  success_cb = notifyOnDownloadSuccess,
+                  failure_cb = notifyOnDownloadFailure };
 
 
-            asyncDownload.url.concat(link);
+               asyncDownload.url.concat(((DataRow)((OldLink)list.first).data).GetData(this.playlistView.locationf));
 
-            asyncDownload.save_path.concat(saveDialog.filePath);
-            asyncDownload.Create();
+               asyncDownload.save_path.concatf("%s/%d%s",saveDialog.currentDirectory,
+                  (int)((DataRow)(((OldLink)list.first).data)).GetData(this.playlistView.trackf),
+                  (char*)((DataRow)(((OldLink)list.first).data)).GetData(this.playlistView.titlef));
+               asyncDownload.Create();
+
+               list.Delete(list.first);
+            }
             return true;
          }
          /* we failed to select a path don't proceed */
@@ -125,7 +162,8 @@ class StmWindow : Window
     * here we update the UI accordingly */
 
     /* AsyncFetch succcess */
-    bool notifyOnTaskSuccess(AsyncTask task)
+
+   bool notifyOnTaskSuccess(AsyncTask task)
     {
        /* AsyncFetch is really what we are dealing with */
        AsyncFetch fetch = (AsyncFetch)task;
@@ -153,7 +191,8 @@ class StmWindow : Window
     }/* end notifyOntaskSuccess func */
 
     /* AsyncFetch failure */
-    bool notifyOnTaskFailure(AsyncTask task)
+
+   bool notifyOnTaskFailure(AsyncTask task)
     {
        /* set the ui status label to error/fail */
        this.requestStatusLabel.changeStatus(error);
@@ -163,7 +202,8 @@ class StmWindow : Window
     }/*end notifyOnTaskFailure func */
 
     /* AsyncDownload succcess */
-    bool notifyOnDownloadSuccess(AsyncTask task)
+
+   bool notifyOnDownloadSuccess(AsyncTask task)
     {
        AsyncDownload handle = (AsyncDownload)task;
 
@@ -173,7 +213,8 @@ class StmWindow : Window
     }/*end notifyOnDownloadSuccess func */
 
     /* AsyncDownload failure */
-    bool notifyOnDownloadFailure(AsyncTask task)
+
+   bool notifyOnDownloadFailure(AsyncTask task)
     {
        AsyncDownload handle = (AsyncDownload)task;
 
@@ -186,13 +227,14 @@ class StmWindow : Window
      * input mechanisms in order to prevent a race condition
      * of multiple tasks trying to access the same playlistview.
      * this function helps us doing this without duplication */
-    public void toggleInputState()
+
+   public void toggleInputState()
     {
       this.moodEntry.disabled = this.moodEntry.disabled ? false : true;
       this.fetchBtn.disabled = this.fetchBtn.disabled ? false : true;
     }/* end toggleInputState */
 
-    bool OnCreate(void)
+   bool OnCreate(void)
     {
       return true;
     }
