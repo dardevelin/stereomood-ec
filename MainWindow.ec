@@ -19,9 +19,17 @@ class StmWindow : Window
 
    EditBox moodEntry
    {
-      this, caption = "moodEntry", size = { 382, 19 }, position = { 24, 24 }
-   };/* end moodEntry instance */
+      this, caption = "moodEntry", size = { 382, 19 }, position = { 24, 24 };
 
+      bool OnKeyDown(Key key, unichar ch)
+      {
+         if( enter == key ) {
+            ((StmWindow)this.master).fetchBtn.NotifyClicked(this.master,((StmWindow)this.master).fetchBtn, 0, 0, Modifiers {});
+         }
+
+         return EditBox::OnKeyDown(key, ch);
+      }
+   };/* end moodEntry instance */
    Button fetchBtn
    {
       this, caption = "Fetch", size = { 135, 21 }, position = { 464, 24 };
@@ -69,7 +77,8 @@ class StmWindow : Window
    PlaylistView playlistView
    {
       this, caption = "playlistView", size = { 572, 198 },
-      position = { 24, 64 }, hasHeader = true;
+      position = { 24, 64 }, hasHeader = true,
+      multiSelect = true;
    };/* end PlaylistView instance */
 
    /*UI footer - static 'output' mechanism */
@@ -87,31 +96,48 @@ class StmWindow : Window
       {
          FileDialog saveDialog { type = save };
          DialogResult dialog_res;
+         OldList list {};
          char *link = null;
 
-         if( this.playlistView.multiSelect == true ) {
-            return false; //not implemented yet
+         //get the selected list
+         this.playlistView.GetMultiSelection(list);
+
+         if( 0 == list.count )
+            return false;
+
+         if( 1 == list.count ) {
+            link = this.playlistView.currentRow.GetData(this.playlistView.locationf);
+            saveDialog.filePath = link;
          }
 
-         link = this.playlistView.currentRow.GetData(this.playlistView.locationf);
-         saveDialog.filePath = link;
-         /*FIXME: add support for other platforms default location */
-         saveDialog.currentDirectory = "/home/";
+         /* get appropriate default path for each OS */
+         #if defined(_WIN32) || defined(WIN32) || defined(WIN64) || defined(_WIN64) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__BORLANDC__)
+            saveDialog.currentDirectory = getenv("Desktop");
+         #else
+            saveDialog.currentDirectory = getenv("HOME");
+         #endif
 
          dialog_res = saveDialog.Modal();
 
          if( dialog_res == yes || dialog_res == ok ) {
 
-            AsyncDownload asyncDownload {
-               userData = this.playlistView.currentRow.GetData(this.playlistView.trackf),
-               success_cb = notifyOnDownloadSuccess,
-               failure_cb = notifyOnDownloadFailure };
+            while( list.count ) {
 
+               AsyncDownload asyncDownload {
+                  userData = ((DataRow)((OldLink)list.first).data).GetData(this.playlistView.trackf),
+                  success_cb = notifyOnDownloadSuccess,
+                  failure_cb = notifyOnDownloadFailure };
 
-            asyncDownload.url.concat(link);
+               asyncDownload.url.concat( link ? link : ((DataRow)((OldLink)list.first).data).GetData(this.playlistView.locationf));
 
-            asyncDownload.save_path.concat(saveDialog.filePath);
-            asyncDownload.Create();
+               asyncDownload.save_path.concatf("%s/%d_%s.mp3",saveDialog.currentDirectory,
+                  (int)((DataRow)(((OldLink)list.first).data)).GetData(this.playlistView.trackf),
+                  (char*)((DataRow)(((OldLink)list.first).data)).GetData(this.playlistView.titlef));
+
+               asyncDownload.Create();
+
+               list.Delete(list.first);
+            }//end while list.count
             return true;
          }
          /* we failed to select a path don't proceed */
@@ -125,8 +151,8 @@ class StmWindow : Window
     * here we update the UI accordingly */
 
     /* AsyncFetch succcess */
-    bool notifyOnTaskSuccess(AsyncTask task)
-    {
+   bool notifyOnTaskSuccess(AsyncTask task)
+   {
        /* AsyncFetch is really what we are dealing with */
        AsyncFetch fetch = (AsyncFetch)task;
        unsigned int num_tracks = 0;
@@ -153,49 +179,53 @@ class StmWindow : Window
     }/* end notifyOntaskSuccess func */
 
     /* AsyncFetch failure */
-    bool notifyOnTaskFailure(AsyncTask task)
-    {
+
+   bool notifyOnTaskFailure(AsyncTask task)
+   {
        /* set the ui status label to error/fail */
        this.requestStatusLabel.changeStatus(error);
        /* unlock out input mechanisms */
        this.toggleInputState();
        return true;
-    }/*end notifyOnTaskFailure func */
+   }/*end notifyOnTaskFailure func */
 
     /* AsyncDownload succcess */
-    bool notifyOnDownloadSuccess(AsyncTask task)
-    {
+
+   bool notifyOnDownloadSuccess(AsyncTask task)
+   {
        AsyncDownload handle = (AsyncDownload)task;
 
        ((PlaylistViewUINT)handle.userData).state = ready;
        this.Update(null);
        return true;
-    }/*end notifyOnDownloadSuccess func */
+   }/*end notifyOnDownloadSuccess func */
 
     /* AsyncDownload failure */
-    bool notifyOnDownloadFailure(AsyncTask task)
-    {
+
+   bool notifyOnDownloadFailure(AsyncTask task)
+   {
        AsyncDownload handle = (AsyncDownload)task;
 
       ((PlaylistViewUINT)handle.userData).state = error;
       this.Update(null);
       return true;
-    }/*end notifyOnDownloadFailure func */
+   }/*end notifyOnDownloadFailure func */
 
     /* since we are still not using tabbed view we lock the
      * input mechanisms in order to prevent a race condition
      * of multiple tasks trying to access the same playlistview.
      * this function helps us doing this without duplication */
-    public void toggleInputState()
-    {
+
+   public void toggleInputState()
+   {
       this.moodEntry.disabled = this.moodEntry.disabled ? false : true;
       this.fetchBtn.disabled = this.fetchBtn.disabled ? false : true;
-    }/* end toggleInputState */
+   }/* end toggleInputState */
 
-    bool OnCreate(void)
-    {
+   bool OnCreate(void)
+   {
       return true;
-    }
+   }
 }/* end StmWindow class */
 
 StmWindow mainWindow {};
