@@ -3,6 +3,7 @@ import "StmLabel"
 import "AsyncFetch"
 import "AsyncDownload"
 import "PlaylistTabView"
+import "MediaPlayer"
 
 
 class StmWindow : Window
@@ -13,10 +14,62 @@ class StmWindow : Window
    hasMinimize = true;
    hasClose = true;
    clientSize = { 616, 324 };
-   anchor = { horz = -10, vert = -56 };
+   anchor = { horz = -10, vert = -62 };
 
    /*UI head static 'input' mechanisms */
 
+   MediaPlayer player {};
+   Timer trackUpdateTimer
+   {
+      userData = this, started = true, delay = 0.2;
+
+      bool DelayExpired()
+      {
+         this.trackProgressBar.progress = this.player.progress;
+         Update(null);
+         return true;
+      }
+   };
+   Button togglePlayPauseBtn
+   {
+      this, caption = $"▶", size = { 31, 21 }, position = { 456, 296 };
+
+      bool NotifyClicked(Button button, int x, int y, Modifiers mods)
+      {
+         if( this.player.isPlaying ) {
+            this.player.pause();
+            caption = "▶";
+            return true;
+         }
+
+         if ( this.player.isReadyToRun ) {
+            caption = "||";
+            this.player.resume();
+            return true;
+         }
+
+         return false;
+      }
+   };
+
+   void UpdateTogglePlayPauseBtnStatus() {
+      this.togglePlayPauseBtn.caption = this.player.isPlaying ? "||" : "▶" ;
+   }
+   Button stopBtn
+   {
+      this, caption = $"■", size = { 31, 21 }, position = { 504, 296 };
+
+      bool NotifyClicked(Button button, int x, int y, Modifiers mods)
+      {
+         this.player.stop();
+         this.UpdateTogglePlayPauseBtnStatus();
+         return true;
+      }
+   };
+   ProgressBar trackProgressBar
+   {
+      this, caption = $"trackProgressBar", size = { 244, 8 }, position = { 192, 296 }, range = 100;
+   };
    EditBox moodEntry
    {
       this, caption = "moodEntry", size = { 382, 19 }, position = { 24, 24 };
@@ -76,9 +129,14 @@ class StmWindow : Window
    /* using PlaylistView directly */
    PlaylistView playlistView
    {
-      this, caption = "playlistView", size = { 572, 198 },
-      position = { 24, 64 }, hasHeader = true,
-      multiSelect = true;
+      this, caption = "playlistView", size = { 572, 198 }, position = { 24, 64 }, hasHeader = true, true;
+
+      bool OnLeftDoubleClick(int x, int y, Modifiers mods)
+      {
+         ((StmWindow)this.master).player.play(((StmWindow)this.master).playlistView.currentRow.GetData(((StmWindow)this.master).playlistView.locationf));
+         ((StmWindow)this.master).UpdateTogglePlayPauseBtnStatus();
+         return PlaylistView::OnLeftDoubleClick(x, y, mods);
+      }
    };/* end PlaylistView instance */
 
    /*UI footer - static 'output' mechanism */
@@ -87,10 +145,9 @@ class StmWindow : Window
       this, caption = "status:", font = { "Tahoma", 8.25f, bold = true },
       size = { 147, 13 }, position = { 24, 296 };
    };/* end StmLabel instance */
-
    Button downloadBtn
    {
-      this, caption = "Download", size = { 151, 21 }, position = { 448, 288 };
+      this, caption = "Download", size = { 151, 21 }, position = { 448, 264 };
 
       bool NotifyClicked(Button button, int x, int y, Modifiers mods)
       {
@@ -151,6 +208,7 @@ class StmWindow : Window
     * here we update the UI accordingly */
 
     /* AsyncFetch succcess */
+
    bool notifyOnTaskSuccess(AsyncTask task)
    {
        /* AsyncFetch is really what we are dealing with */

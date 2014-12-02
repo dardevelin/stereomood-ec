@@ -18,6 +18,10 @@
             "PreprocessorDefinitions" : [
                "_DEBUG"
             ],
+            "Libraries" : [
+               "ecere",
+               "vlc"
+            ],
             "FastMath" : false
          }
       },
@@ -46,11 +50,24 @@
             "DynamicString.ec"
          ]
       },
-      "MainWindow.ec",
+      {
+         "FileName" : "MainWindow.ec",
+         "Configurations" : [
+            {
+               "Name" : "Debug",
+               "Options" : {
+                  "CompilerOptions" : [
+                     "vlc"
+                  ]
+               }
+            }
+         ]
+      },
       "StmPlaylist.ec",
       "AsyncFetch.ec",
       "PlaylistViewUINT.ec",
-      "AsyncDownload.ec"
+      "AsyncDownload.ec",
+      "MediaPlayer.ec"
    ],
    "ResourcesPath" : "",
    "Resources" : [
