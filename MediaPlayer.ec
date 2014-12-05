@@ -46,6 +46,25 @@ class MediaPlayer
       }
    }//end progress property
 
+   public property uint volume {
+      get {
+         float p = 0.0;
+         if( null == media_player )
+            return 0;
+
+         p = libvlc_audio_get_volume(media_player);
+         return (uint)(p * 100);
+      }
+   }//end volume property
+
+   public uint set_volume(float percentage) {
+      if( null == media_player )
+         return 0;
+
+      libvlc_audio_set_volume(media_player, (int)percentage);
+      return volume;
+   }//end set_volume func
+
    public void play(const char* url) {
       if( null == url )
          return;
@@ -67,6 +86,13 @@ class MediaPlayer
 
    }//end Play func
 
+   public uint seek(float percentage) {
+      if( this.isReadyToRun ) {
+         libvlc_media_player_set_position(media_player, (percentage/100) );
+      }
+      return this.progress;
+   }//end seek
+
    public void pause() {
       if( null == media_player )
          return;
@@ -74,6 +100,10 @@ class MediaPlayer
       libvlc_media_player_pause(media_player);
       this.playing = false;
    }//end pause func
+
+   public property bool isPaused {
+      get { return (null != media_player && false == this.playing); }
+   }//end isPaused property
 
    public void resume() {
       if( null == media_player )

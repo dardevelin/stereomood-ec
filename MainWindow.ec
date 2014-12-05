@@ -14,7 +14,7 @@ class StmWindow : Window
    hasMinimize = true;
    hasClose = true;
    clientSize = { 616, 324 };
-   anchor = { horz = -10, vert = -62 };
+   anchor = { horz = -10, vert = -55 };
 
    /*UI head static 'input' mechanisms */
 
@@ -26,6 +26,7 @@ class StmWindow : Window
       bool DelayExpired()
       {
          this.trackProgressBar.progress = this.player.progress;
+         this.volumeBar.progress = (this.player.volume/100);
          Update(null);
          return true;
       }
@@ -38,14 +39,29 @@ class StmWindow : Window
       {
          if( this.player.isPlaying ) {
             this.player.pause();
-            caption = "▶";
+            this.togglePlayPauseBtn.caption = "▶";
             return true;
          }
 
-         if ( this.player.isReadyToRun ) {
-            caption = "||";
+         if( this.player.isPaused ) {
+            this.togglePlayPauseBtn.caption = "||";
             this.player.resume();
             return true;
+         }
+
+         if( null != this.playlistView.currentRow ) {
+            DynamicString str_caption {};
+            this.player.play(this.playlistView.currentRow.GetData(this.playlistView.locationf));
+            str_caption.concatf("%s-%s",
+               (char*)this.playlistView.currentRow.GetData(this.playlistView.titlef),
+               (char*)(this.player.isPlaying ? "Playing" : "Failed"));
+
+            this.playingStatus.caption = str_caption.array;
+
+            if( this.player.isPlaying ) {
+               this.togglePlayPauseBtn.caption = "||";
+               return true;
+            }
          }
 
          return false;
@@ -69,6 +85,25 @@ class StmWindow : Window
    ProgressBar trackProgressBar
    {
       this, caption = $"trackProgressBar", size = { 244, 8 }, position = { 192, 296 }, range = 100;
+
+      bool OnLeftButtonDown(int x, int y, Modifiers mods)
+      {
+         //find percentage
+         //if the width is 100% and we have x, the percentage = x * 100/width
+         //we cast everything to float for increased precision
+         ((StmWindow)this.master).player.seek( ((float)((float)x)*((float)100)/((float)this.size.w)) );
+         return true;
+      }
+   };
+   ProgressBar volumeBar
+   {
+      this, caption = $"volumeBar", size = { 244, 8 }, position = { 192, 312 }, range = 100;
+
+      bool OnLeftButtonDown(int x, int y, Modifiers mods)
+      {
+         ((StmWindow)this.master).player.set_volume( ((float)((float)x)*((float)100)/((float)this.size.w)) );
+         return true;
+      }
    };
    EditBox moodEntry
    {
@@ -133,8 +168,16 @@ class StmWindow : Window
 
       bool OnLeftDoubleClick(int x, int y, Modifiers mods)
       {
+         DynamicString str_caption {};
          ((StmWindow)this.master).player.play(((StmWindow)this.master).playlistView.currentRow.GetData(((StmWindow)this.master).playlistView.locationf));
          ((StmWindow)this.master).UpdateTogglePlayPauseBtnStatus();
+
+         str_caption.concatf("%s-%s",
+            (char*)((StmWindow)this.master).playlistView.currentRow.GetData( ((StmWindow)this.master).playlistView.titlef ),
+            (char*)(((StmWindow)this.master).player.isPlaying ? "Playing" : "Failed"));
+
+         ((StmWindow)this.master).playingStatus.caption = str_caption.array;
+
          return PlaylistView::OnLeftDoubleClick(x, y, mods);
       }
    };/* end PlaylistView instance */
@@ -142,8 +185,11 @@ class StmWindow : Window
    /*UI footer - static 'output' mechanism */
    StmLabel requestStatusLabel
    {
-      this, caption = "status:", font = { "Tahoma", 8.25f, bold = true },
-      size = { 147, 13 }, position = { 24, 296 };
+      this, caption = "status:", font = { "Tahoma", 8.25f, bold = true }, size = { 147, 13 }, position = { 24, 296 }
+   };
+   Label playingStatus
+   {
+      this, caption = "", font = { "Tahoma", 8.25f, bold = true }, size = { 234, 13 }, position = { 192, 272 }
    };/* end StmLabel instance */
    Button downloadBtn
    {
