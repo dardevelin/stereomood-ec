@@ -25,7 +25,18 @@ class StmWindow : Window
 
       bool DelayExpired()
       {
+         DataRow crow;
          this.trackProgressBar.progress = this.player.progress;
+
+         //go to next track automatically
+         if( (!this.player.isPaused && 99 == this.trackProgressBar.progress) ) {
+            crow = this.playlistView.currentRow;
+            if( crow.next ) {
+               this.playlistView.SelectRow(crow.next);
+               this.playlistView.OnLeftDoubleClick(0, 0, Modifiers {});
+            }
+         }
+
          this.volumeBar.progress = (this.player.volume/100);
          Update(null);
          return true;
@@ -180,6 +191,7 @@ class StmWindow : Window
 
          return PlaylistView::OnLeftDoubleClick(x, y, mods);
       }
+
    };/* end PlaylistView instance */
 
    /*UI footer - static 'output' mechanism */
@@ -332,4 +344,4 @@ class StmWindow : Window
    }
 }/* end StmWindow class */
 
-StmWindow mainWindow {};
+StmWindow mainWindow { };
