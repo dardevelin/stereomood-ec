@@ -13,8 +13,8 @@ class StmWindow : Window
    borderStyle = fixed;
    hasMinimize = true;
    hasClose = true;
-   clientSize = { 616, 324 };
-   anchor = { horz = -10, vert = -55 };
+   size = { 638, 350 };
+   anchor = { horz = -2, vert = -15 };
 
    /*UI head static 'input' mechanisms */
 
@@ -93,6 +93,37 @@ class StmWindow : Window
          return true;
       }
    };
+   Button previousBtn
+   {
+      this, caption = $"⏮", size = { 31, 21 }, position = { 545, 296 };
+
+      bool NotifyClicked(Button button, int x, int y, Modifiers mods)
+      {
+         DataRow crow = this.playlistView.currentRow;
+
+         if( crow && crow.previous ) {
+            this.playlistView.SelectRow(crow.previous);
+            this.playlistView.OnLeftDoubleClick(0, 0, Modifiers {});
+         }
+
+         return true;
+      }
+   };
+   Button nextBtn
+   {
+      this, caption = $"⏭", size = { 31, 21 }, position = { 585, 296 };
+
+      bool NotifyClicked(Button button, int x, int y, Modifiers mods)
+      {
+         DataRow crow = this.playlistView.currentRow;
+
+         if( crow && crow.next ) {
+            this.playlistView.SelectRow(crow.next);
+            this.playlistView.OnLeftDoubleClick(0, 0, Modifiers {});
+         }
+         return true;
+      }
+   };
    ProgressBar trackProgressBar
    {
       this, caption = $"trackProgressBar", size = { 244, 8 }, position = { 192, 296 }, range = 100;
@@ -131,7 +162,8 @@ class StmWindow : Window
    };/* end moodEntry instance */
    Button fetchBtn
    {
-      this, caption = "Fetch", size = { 135, 21 }, position = { 464, 24 };
+      this, caption = "Fetch", size = { 151, 21 }, position = { 464, 24 };
+
       bool NotifyClicked(Button button, int x, int y, Modifiers mods)
       {
          /*FIXME: tabControl usage is currently suspended, thus
@@ -159,7 +191,6 @@ class StmWindow : Window
          Update(null);
          return true;
       }/* end NotifyClicked downloadBtn */
-
    };/* end fetchBtn instance */
 
    /*UI body - dynamic 'view' mechanism */
@@ -175,7 +206,7 @@ class StmWindow : Window
    /* using PlaylistView directly */
    PlaylistView playlistView
    {
-      this, caption = "playlistView", size = { 572, 198 }, position = { 24, 64 }, hasHeader = true, true;
+      this, caption = "playlistView", size = { 588, 198 }, position = { 24, 64 }, hasHeader = true, true;
 
       bool OnLeftDoubleClick(int x, int y, Modifiers mods)
       {
@@ -191,7 +222,6 @@ class StmWindow : Window
 
          return PlaylistView::OnLeftDoubleClick(x, y, mods);
       }
-
    };/* end PlaylistView instance */
 
    /*UI footer - static 'output' mechanism */
@@ -205,7 +235,7 @@ class StmWindow : Window
    };/* end StmLabel instance */
    Button downloadBtn
    {
-      this, caption = "Download", size = { 151, 21 }, position = { 448, 264 };
+      this, caption = "Download", size = { 167, 21 }, position = { 448, 264 };
 
       bool NotifyClicked(Button button, int x, int y, Modifiers mods)
       {
